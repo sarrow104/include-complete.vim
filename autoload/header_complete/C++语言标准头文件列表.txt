@@ -1,0 +1,109 @@
+* C++语言标准头文件列表
+
+trackback:http://www.cplusplus.com/reference/
+
+======================================================================
+
+** C Library
+
+The elements of the C language library are also included as a subset of the C++
+Standard library. These cover many aspects, from general utility functions and
+macros to input/output functions and dynamic memory management functions:
+
+cassert (assert.h)	C Diagnostics Library (header)
+cctype (ctype.h)	Character handling functions (header)
+cerrno (errno.h)	C Errors (header)
+cfloat (float.h)	Characteristics of floating-point types (header)
+ciso646 (iso646.h)	ISO 646 Alternative operator spellings (header)
+climits (limits.h)	Sizes of integral types (header)
+clocale (locale.h)	C localization library (header)
+cmath (math.h)		C numerics library (header)
+csetjmp (setjmp.h)	Non local jumps (header)
+csignal (signal.h)	C library to handle signals (header)
+cstdarg (stdarg.h)	Variable arguments handling (header)
+cstddef (stddef.h)	C Standard definitions (header)
+cstdio (stdio.h)	C library to perform Input/Output operations (header)
+cstdlib (stdlib.h)	C Standard General Utilities Library (header)
+cstring (string.h)	C Strings (header)
+ctime (time.h)	 	C Time Library (header)
+
+----------------------------------------------------------------------
+
+C++ Standard Library: Miscellaneous libraries
+Language support library:
+
+limits	 		Numeric limits (header)
+new	 		Dynamic memory (header)
+typeinfo	 	Type information (header)
+exception	 	Standard exception class (class)
+
+----------------------------------------------------------------------
+
+Diagnostics library:
+
+stdexcept	 	Exception classes (header)
+
+----------------------------------------------------------------------
+
+General utilities library:
+
+utility	 		Utility components (header)
+functional	 	Function objects (header)
+memory	 		Memory elements (header)
+
+
+----------------------------------------------------------------------
+
+Strings library:
+
+string	 		C++ Strings library (library)
+
+----------------------------------------------------------------------
+
+Localization library:
+
+locale	 		Localization library (header)
+
+
+======================================================================
+
+C++ Standard Library: Standard Template Library (STL)
+
+----------------------------------------------------------------------
+
+Containers library:
+
+bitset	 	Bitset (class template)
+deque	 	Double ended queue (class template)
+list	 	List (class template)
+map	 	Map (class template)
+multimap	Multiple-key map (class template)
+multiset	Multiple-key set (class template)
+priority_queue	Priority queue (class template)
+queue	 	FIFO queue (class template)
+set	 	Set (class template)
+stack	 	LIFO stack (class template)
+vector	 	Vector (class template)
+
+
+----------------------------------------------------------------------
+
+Iterators library:
+
+iterator	Iterator definitions (header)
+
+
+----------------------------------------------------------------------
+
+Algorithms library:
+
+algorithm	Standard Template Library: Algorithms (library)
+
+
+----------------------------------------------------------------------
+
+Numeric library:
+
+complex	 	Complex numbers library (header)
+valarray	Library for arrays of numeric values (header)
+numeric		Generalized numeric operations (header)

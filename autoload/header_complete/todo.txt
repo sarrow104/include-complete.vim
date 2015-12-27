@@ -1,0 +1,32 @@
+* todo
+
+date:2011-12-16
+
+======================================================================
+
+** 如何查自己装了哪些库呢？
+
+aptitude search "~idev"
+aptitude search "~idoc$"
+
+# 意思是将search后面的参数，理解为正则表达式匹配 -i 'doc$'
+# 但具体语法规则，以及与sed、vim的异同还不清除。
+# 比如，第二个语句的结果，为：
+
+i   fltk1.3-doc             - Fast Light Toolkit - documentation
+i A freemind-doc            - Documentation for FreeMind
+i   imagemagick-doc         - document files of ImageMagick
+i   libboost1.46-doc        - Boost.org libraries documentation
+i A libpanel-applet-4-doc   - library for GNOME Panel applets - documentation files
+i A libssl-doc              - SSL development documentation documentation
+i A python-gtk2-doc         - Python bindings for the GTK+ widget set - documentation
+
+** 列表出对应安装里面的文件，的安装路径
+
+dpkg -L xxxx-dev|grep '\.h$'
+
+不就可以获取指定的头文件了嘛。
+
+另，搭配ctags使用，以生成特定包的标签文件。以qt4库为例：
+
+ctags `dpkg -L libqt4-dev | grep ".h$"`
