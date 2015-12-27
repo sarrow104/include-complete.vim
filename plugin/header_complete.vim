@@ -1,3 +1,3 @@
 
 au FileType c,cpp
-	    \ setlocal completefunc=header_complete#CompleteIncludedHeaderFile
+	    \ setlocal omnifunc=header_complete#CompleteIncludedHeaderFile
