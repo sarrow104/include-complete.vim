@@ -1,3 +1,3 @@
 
 au FileType c,cpp
-	    \ setlocal omnifunc=header_complete#CompleteIncludedHeaderFile
+	    \ command -nargs=0	ToggleCF	call header_complete#ToggleWithYCM()

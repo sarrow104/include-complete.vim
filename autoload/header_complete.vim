@@ -24,6 +24,14 @@ if !exists('s:path_sep')
     let s:path_sep = '/'
 endif
 
+function! header_complete#ToggleWithYCM()
+	if &completefunc=="youcompleteme#Complete"
+		setlocal completefunc=header_complete#CompleteIncludedHeaderFile
+	elseif &completefunc=="header_complete#CompleteIncludedHeaderFile"
+		setlocal completefunc=youcompleteme#Complete
+	endif
+endfunction
+
 function s:MySys()
     if exists('g:operation_system')
 	return g:operation_system
