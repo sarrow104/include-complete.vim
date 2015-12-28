@@ -32,24 +32,11 @@ function! header_complete#ToggleWithYCM()
 	endif
 endfunction
 
-function s:MySys()
-    if exists('g:operation_system')
-	return g:operation_system
-    endif
-    let g:operation_system=''
-    if has('win16') || has('win32') || has('win64') || has('win95')
-	let g:operation_system='windows'
-    elseif has('unix')
-	let g:operation_system='linux'
-    endif
-    return g:operation_system
-endfunction
-
 function! s:Get_IncludeHeaderForest()
     if !exists('g:IncludeHeaderForest')
 	"let ini_file = readfile(fnamemodify(expand('<sfile>'), ':p:h'). 'header_complete/include.ini')
 	let g:IncludeHeaderForest = s:Create_IncludeHeaderForest(globpath(&rtp,
-		    \ 'autoload/header_complete/include.'.<SID>MySys().'.ini'))
+		    \ 'autoload/header_complete/include.'.util#MySys().'.ini'))
     endif
     return g:IncludeHeaderForest
 endfunction
