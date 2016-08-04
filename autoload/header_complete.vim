@@ -24,6 +24,7 @@ if !exists('s:path_sep')
     let s:path_sep = '/'
 endif
 
+if globpath(&rtp, 'autoload/youcompleteme.vim') != ""
 function! header_complete#ToggleWithYCM()
 	if &completefunc=="youcompleteme#Complete"
 		setlocal completefunc=header_complete#CompleteIncludedHeaderFile
@@ -31,14 +32,58 @@ function! header_complete#ToggleWithYCM()
 		setlocal completefunc=youcompleteme#Complete
 	endif
 endfunction
+endif
 
 function! s:Get_IncludeHeaderForest()
     if !exists('g:IncludeHeaderForest')
-	"let ini_file = readfile(fnamemodify(expand('<sfile>'), ':p:h'). 'header_complete/include.ini')
-	let g:IncludeHeaderForest = s:Create_IncludeHeaderForest(globpath(&rtp,
-		    \ 'autoload/header_complete/include.'.util#MySys().'.ini'))
+        if exists('g:IncludeHeaderForest_use_config') && g:IncludeHeaderForest_use_config != 0
+                    \ || (!exists('$CPATH') || expand('$CPATH') == "")
+            let g:IncludeHeaderForest = s:Create_IncludeHeaderForest(globpath(&rtp,
+                        \ 'autoload/header_complete/include.'.util#MySys().'.ini'))
+        else
+            let g:IncludeHeaderForest = s:Create_IncludeHeaderForestFromCPATH()
+        endif
     endif
     return g:IncludeHeaderForest
+endfunction
+
+function! s:Create_IncludeHeaderForestFromCPATH()
+    let extension_dict = {
+		\'no_ext': [''],
+		\'h': ['h'],
+		\'hpp': ['hpp']}
+    let status = ''
+
+    let forest = []
+
+    let delimiter = ';'
+    if util#MySys() == 'linux'
+        let delimiter = ':'
+    endif
+
+    for line in split(expand('$CPATH'), delimiter)
+        if !isdirectory(line)
+            continue
+        endif
+
+        if !len(forest) || len(forest) && forest[-1] != {}
+            call add(forest, {})	" make a new tree at the end position
+        endif
+
+        let tree = forest[-1]
+
+        let _base_ = line
+
+        let tree['base'] = _base_
+        call msg#DebugMsg(tree['base'])
+        let tree['root'] = {}
+        let tree['extension_pattern'] = '^\c\('.join(['','h','hpp'], '\|').'\)$'
+        let tree['max_depth'] = 10
+        call msg#DebugMsg(string(tree))
+    endfor
+
+    call s:Appending_path(forest)
+    return forest
 endfunction
 
 function! s:Create_IncludeHeaderForest(ini_file_name)
@@ -385,6 +430,10 @@ function! header_complete#CompleteIncludedHeaderFile(findstart, base)
 		return s:Get_Local_Matched_HeaderFiles(paths)
 	    endif
 	else
+        " NOTE
+        " 调用youcompleteme#Complete之后，它对应的<C-n><C-p>动作，
+        " 会重置completefunc
+        " return youcompleteme#Complete(findstart, base)
 	    return []
 	endif
     endif
