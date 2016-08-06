@@ -47,6 +47,25 @@ function! s:Get_IncludeHeaderForest()
     return g:IncludeHeaderForest
 endfunction
 
+function! s:GenerateSuffixPatternFromList(suffix_list)
+    return '^\c\('.join(a:suffix_list, '\|').'\)$'
+endfunction
+
+function! s:Get_IncludeHeaderForestLocal(paths, n_upstairs)
+    " Sarrow: 2011年01月13日
+    let local_tree = {
+		\ 'root': {},
+		\ 'base': fnamemodify(expand('%'), ':p:h'.repeat(':h',a:n_upstairs)),
+		\ 'max_depth': '0',
+		\ 'extension_pattern': <SID>GenerateSuffixPatternFromList(['h', 'hpp'])}
+    if !exists('g:IncludeHeaderForestLocal') || empty(g:IncludeHeaderForestLocal)
+        let g:IncludeHeaderForestLocal = [l:local_tree]
+    else
+        let g:IncludeHeaderForestLocal[0] = l:local_tree
+    endif
+    return g:IncludeHeaderForestLocal
+endfunction
+
 function! s:Create_IncludeHeaderForestFromCPATH()
     let extension_dict = {
 		\'no_ext': [''],
@@ -67,22 +86,22 @@ function! s:Create_IncludeHeaderForestFromCPATH()
         endif
 
         if !len(forest) || len(forest) && forest[-1] != {}
-            call add(forest, {})	" make a new tree at the end position
+            " make a new tree at the end position
+            call add(forest, 
+                    \ {
+                    \   'base': line,
+                    \   'root': {},
+                    \   'extension_pattern': <SID>GenerateSuffixPatternFromList(['','h','hpp']),
+                    \   'max_depth': 10
+                    \ })
         endif
 
         let tree = forest[-1]
-
-        let _base_ = line
-
-        let tree['base'] = _base_
         call msg#DebugMsg(tree['base'])
-        let tree['root'] = {}
-        let tree['extension_pattern'] = '^\c\('.join(['','h','hpp'], '\|').'\)$'
-        let tree['max_depth'] = 10
         call msg#DebugMsg(string(tree))
     endfor
 
-    call s:Appending_path(forest)
+    call <SID>Appending_path(forest)
     return forest
 endfunction
 
@@ -183,7 +202,7 @@ function! s:Create_IncludeHeaderForest(ini_file_name)
 		let usr_exts += extension_dict[suffix]
 	    endfor
 	    " Sarrow: 2011-11-01 stricmp \c
-	    let tree['extension_pattern'] = '^\c\('.join(usr_exts, '\|').'\)$'
+	    let tree['extension_pattern'] = <SID>GenerateSuffixPatternFromList(usr_exts)
 	    " End:
 	    continue
 	endif
@@ -229,7 +248,7 @@ function! s:Create_IncludeHeaderForest(ini_file_name)
     "             "'exclude': ['**2/readme.txt'],
     "}}}1
     "call filter(forest, 'isdirectory(v:val["base"])')
-    call s:Appending_path(forest)
+    call <SID>Appending_path(forest)
     return forest
 endfunction
 
@@ -254,19 +273,17 @@ endfunction
 
 " 根据当前目录，返回匹配的头文件列表
 function! s:Get_Local_Matched_HeaderFiles(paths)
-    " Sarrow: 2011年01月13日
-    let n_upstairs = count(a:paths, '..')
-    let local_tree = [{
-		\ 'root': {},
-		\ 'base': fnamemodify(expand('%'), ':p:h'.repeat(':h',n_upstairs)),
-		\ 'max_depth': '0',
-		\ 'extension_pattern': '\c'.'^\('.join(['h', 'hpp'], '\|').'\)$'}]
-    return s:Return_matched_headerfiles(local_tree, a:paths[n_upstairs :])
+    " NOTE: 假设，用户输入的 a:paths，以".."开头！
+    " let n_upstairs = count(a:paths, '..')
+    let n_upstairs = len(matchlist(a:paths, '\.\.'))
+    return <SID>Return_matched_headerfiles(
+                \ <SID>Get_IncludeHeaderForestLocal(a:paths, l:n_upstairs),
+                \ a:paths[n_upstairs :])
 endfunction
 
 " 根据paths:List<String>，返回匹配的头文件列表
 function! s:Get_Matched_HeaderFiles(paths)
-    return s:Return_matched_headerfiles(s:Get_IncludeHeaderForest(), a:paths)
+    return <SID>Return_matched_headerfiles(s:Get_IncludeHeaderForest(), a:paths)
 endfunction
 
 function s:Return_matched_headerfiles(forest, paths)
@@ -303,7 +320,7 @@ function s:Return_matched_headerfiles(forest, paths)
         for node in stem
 	    call msg#DebugMsg('loop node > '.node)
 	    if Sub_tree == {}
-                call s:Create_sub_node(Sub_tree, tree, stem, cur_depth)
+                call <SID>Create_sub_node(Sub_tree, tree, stem, cur_depth)
 	    endif
 	    if !has_key(Sub_tree, node) || s:Is_leaf_node(Sub_tree, node)
 		call msg#DebugMsg('quit loop at node > '.node)
@@ -321,7 +338,7 @@ function s:Return_matched_headerfiles(forest, paths)
         endif
 
         if Sub_tree == {}
-            call s:Create_sub_node(Sub_tree, tree, stem, cur_depth)
+            call <SID>Create_sub_node(Sub_tree, tree, stem, cur_depth)
         endif
 
         let pre_path = len(stem) > 1 ? join(stem[1:-1], s:path_sep) . s:path_sep : ''
@@ -369,21 +386,43 @@ function! s:Create_sub_node(notes, tree, stem, cur_depth)
     endfor
 endfunction
 
-function! Is_left_angle_bracket_pattern(str)
+function! s:Is_left_angle_bracket_pattern(str)
     let pattern = '^#\s*include\s*<\zs\%(\w\+[\\/]\)*\%(\w\+\%(\.\w*\)\=\)\=$'
-    return Get_mathed_part_and_split_to_stems(pattern, a:str)
+    return <SID>Get_mathed_part_and_split_to_stems(pattern, a:str)
 endfunction
 
-function! Is_double_quoted_pattern(str)
+function! s:Is_double_quoted_pattern(str)
     let pattern = '^#\s*include\s*"\zs\%(\.\.[\\/]\)*\%(\w\+[\\/]\)*\%(\w\+\%(\.\w*\)\=\)\=$'
-    return Get_mathed_part_and_split_to_stems(pattern, a:str)
+    return <SID>Get_mathed_part_and_split_to_stems(pattern, a:str)
 endfunction
 
-function! Get_mathed_part_and_split_to_stems(pattern, str)
+function! s:Get_mathed_part_and_split_to_stems(pattern, str)
     if a:str =~ a:pattern
 	return split(matchstr(a:str, a:pattern), '/\|\', 1)
     else
 	return []
+    endif
+endfunction
+
+function! header_complete#addDirForLocal(dirLocal)
+    let forest = s:Get_IncludeHeaderForestLocal('.', 0)
+    call msg#DebugMsg(string(forest))
+    let path2Add = simplify(fnamemodify(a:dirLocal, ':p'))
+    let hasFound = 0
+    for i in forest
+        if i['base'] == path2Add
+            let hasFound = 1
+            break
+        endif
+    endfor
+    if hasFound == 0
+        call add(forest,
+                    \ {
+                    \   'base': path2Add,
+                    \   'root': {},
+                    \   'extension_pattern': <SID>GenerateSuffixPatternFromList(['','h','hpp']),
+                    \   'max_depth': 10
+                    \ })
     endif
 endfunction
 
@@ -401,11 +440,11 @@ function! header_complete#CompleteIncludedHeaderFile(findstart, base)
 
 	let b:itype = 'empty'
         let line = getline('.')[:start_col-1]
-        let paths = Is_left_angle_bracket_pattern(line)
+        let paths = <SID>Is_left_angle_bracket_pattern(line)
 	if len(paths)
 	    let b:itype = 'system'
 	else
-	    let paths = Is_double_quoted_pattern(line)
+	    let paths = <SID>Is_double_quoted_pattern(line)
 	    if len(paths)
 		let b:itype = 'local'
 	    endif
@@ -425,9 +464,9 @@ function! header_complete#CompleteIncludedHeaderFile(findstart, base)
 	    let paths = b:paths
 	    unlet b:paths
 	    if b:itype == 'system'
-		return s:Get_Matched_HeaderFiles(paths)
+		return <SID>Get_Matched_HeaderFiles(paths)
 	    elseif b:itype == 'local'
-		return s:Get_Local_Matched_HeaderFiles(paths)
+		return <SID>Get_Local_Matched_HeaderFiles(paths)
 	    endif
 	else
         " NOTE
